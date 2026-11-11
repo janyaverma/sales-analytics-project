@@ -14,6 +14,17 @@ Here I will define the business problem and questions that are required to be an
 
 ### 1.4. Analytical Questions
 
+The project addresses 14 analytical questions
+defined by a hypothetical e-commerce client.
+
+These requirements guide the development of
+the Power BI dashboard, covering key business
+areas such as sales performance, customer
+behavior, and product performance.
+
+For the complete list of analytical requirements,
+see [Business Requirements](docs/business_requirements.md).
+
 ## 2. Tech Stack
 
 I have used the following tools for doing this project.
@@ -108,6 +119,7 @@ This project is designed to demonstrate three core competencies relevant to data
 - Document data sources, assumptions, metric definitions, and limitations.
 - Make the analytical workflow understandable and reproducible, where the available data and tools permit.
 - Present findings clearly and support conclusions with evidence.
+- Practice version control and commit meaningful changes throughout the project instead of uploading everything at the end. Use clear messages such as 'Add sales KPI queries'.
 
 ---
 
@@ -120,28 +132,28 @@ sales-analytics-project/
 │
 ├── README.md
 ├── .gitignore
+├── .gitattributes
 ├── requirements.txt
-│
 ├── docs/
 │   ├── project_brief.md
 │   ├── data_dictionary.md
-│   └── findings.md
-│
+│   ├── business_requirements.md 
+|   └── findings.md
+│ 
 ├── data/
 │   ├── raw/
 │   └── processed/
 │
 ├── sql/
-│   ├── 01_data_quality_checks.sql
-│   ├── 02_data_exploration.sql
-│   ├── 03_kpi_analysis.sql
-│   └── 04_deep_dive_analysis.sql
+│   ├── 01_create_db.sql
+|
 │
 ├── notebooks/
-│   └── 01_exploratory_analysis.ipynb
+|   ├── 01_data_cleaning.ipynb
+│   └── 02_exploratory_analysis.ipynb
 │
 ├── src/
-│   └── data_cleaning.py
+│   └── data_cleaning.txt
 │
 ├── powerbi/
 │   └── sales_dashboard.pbix
@@ -170,3 +182,7 @@ sales-analytics-project/
 | `findings.md` | Analytical findings and business recommendations. |
 | `data_cleaning.py` | Reusable Python ETL and data-cleaning pipeline. |
 | `requirements.txt` | Python dependencies required to run the project. |
+
+# Limitations of this repository
+
+GitHub is my version-control and documentation home, not necessarily the place where my entire project runs. A Power BI .pbix file may require Power BI Desktop to inspect, and database setup may require separate instructions.

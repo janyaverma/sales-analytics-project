@@ -1,0 +1,11 @@
+# Automatically detect text files and normalize line endings
+* text=auto
+
+# Python and project documentation
+*.py text eol=lf
+*.ipynb text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+
+# CSV datasets
+*.csv text eol=lf

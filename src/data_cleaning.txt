@@ -1,0 +1,172 @@
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
+
+# Customers Table
+
+query = "SELECT * FROM olist_customers_dataset"
+customers = pd.read_sql(query, conn)
+
+customers['customer_city'] = customers['customer_city'].str.title()
+
+customers = customers.drop(columns=["customer_unique_id"])
+
+# Geolocation Table
+
+query = "SELECT * FROM olist_geolocation_dataset"
+geo = pd.read_sql(query, conn)
+
+geo["geolocation_city"] = geo["geolocation_city"].str.title()
+
+geo.drop_duplicates(inplace=True)
+
+geo.drop(columns=["geolocation_lat", "geolocation_lng"], inplace=True)
+
+geo["geolocation_city"] = geo["geolocation_city"].apply(lambda x:unidecode(x))
+
+def remove_numbers(s):
+    return re.sub(r'\d+', '', str(s))
+
+geo["geolocation_city"] = geo["geolocation_city"].apply(remove_numbers)
+
+geo["geolocation_city"] = geo["geolocation_city"].str.replace("'", "", regex=False)
+
+geo["geolocation_city"] = geo["geolocation_city"].str.replace("*", "", regex=False)
+
+geo["geolocation_city"] = geo["geolocation_city"].str.replace("...", "", regex=False)
+
+def keep_text_only(s):
+    if pd.isna(s):
+        return s
+    return re.sub(r'[^a-zA-Z\s]', '', str(s)).strip()
+
+geo["geolocation_city"] = geo["geolocation_city"].apply(keep_text_only)
+
+geo["geolocation_city"] = geo["geolocation_city"].str.replace("Sao Joao Do Pau D Alho","Sao Joao Do Pau Dalho")
+
+geo.drop_duplicates(inplace=True)
+
+# Customers Table
+
+customers["customer_city"] = customers["customer_city"].str.title()
+customers["customer_city"] = customers["customer_city"].apply(unidecode)
+customers["customer_city"] = customers["customer_city"].apply(keep_text_only)
+
+# Products Table
+
+query = "SELECT * FROM olist_products_dataset"
+products = pd.read_sql(query, conn)
+
+products.drop(columns=['product_name_lenght', 'product_description_lenght', 'product_weight_g', 'product_length_cm', 'product_height_cm', 'product_width_cm'], inplace=True)
+
+# Products Table and Products_name Table
+
+query = "select * from product_category_name_translation"
+products_name = pd.read_sql(query, conn)
+
+products_name.drop(index=0, inplace=True)
+
+products = products.merge(products_name, left_on="product_category_name", right_on="product_category", how="left")
+
+products.loc[products["product_category_name"] == "pc_gamer","product_category_english"] = "computers"
+products.loc[products["product_category_name"] == "portateis_cozinha_e_preparadores_de_alimentos","product_category_english"] = "small_appliances_home_oven_and_coffee"
+
+products["product_category_name"] = products["product_category_english"]
+
+products.drop(columns=["product_category_english","product_category"], inplace=True)
+
+# Sellers Table
+
+query = "SELECT * FROM olist_sellers_dataset"
+sellers = pd.read_sql(query, conn)
+
+sellers["seller_city"] = sellers["seller_city"].str.title()
+
+sellers['seller_city'] = sellers['seller_city'].apply(keep_text_only)
+
+# Orders Table
+
+query = "SELECT * FROM olist_orders_dataset"
+orders = pd.read_sql(query, conn)
+
+orders = orders[
+    (
+        ((orders["order_approved_at"] - orders["order_purchase_timestamp"]).dt.total_seconds()/8600 >= 0) 
+        & 
+        ((orders["order_delivered_carrier_date"] - orders["order_approved_at"]).dt.days >= 0)
+        )
+    ]
+
+to_remove = orders[(orders["order_status"]=="canceled") & (orders["order_delivered_customer_date"].notna())].index
+
+orders = orders.drop(to_remove)
+
+# Payments Table
+
+query = "SELECT * FROM olist_order_payments_dataset"
+payments = pd.read_sql(query, conn)
+
+payments.drop(columns=["payment_sequential", "payment_installments"], inplace=True)
+
+payments = payments.groupby(["order_id", "payment_type"])["payment_value"].sum().reset_index()
+
+# Payments Table and df (Temporary Original Uncleaned Orders Table)
+
+orders = pd.merge(orders, payments, on="order_id", how="inner")
+
+# Items Table
+
+query = "SELECT * FROM olist_order_items_dataset"
+items = pd.read_sql(query, conn)
+
+orders = pd.merge(orders, items, on="order_id", how="inner")
+
+orders = orders[
+    (orders["shipping_limit_date"] > orders["order_purchase_timestamp"])
+    &
+    (orders["shipping_limit_date"] > orders["order_approved_at"])
+    &
+    (orders["shipping_limit_date"] < orders["order_delivered_customer_date"])
+]
+
+orders.drop(columns=["order_item_id"], inplace=True)
+
+orders = orders.groupby(['order_id', 'customer_id', 'order_status', 'order_purchase_timestamp',
+       'order_approved_at', 'order_delivered_carrier_date',
+       'order_delivered_customer_date', 'order_estimated_delivery_date',
+       'payment_type', 'payment_value', 'product_id', 'seller_id',
+       'shipping_limit_date'])[["price", "freight_value"]].sum().reset_index()
+
+orders = pd.merge(orders, customers, on="customer_id", how="inner")
+
+# Reviews Table
+
+query ="select * from olist_order_reviews_dataset"
+reviews = pd.read_sql(query, conn)
+
+reviews.drop(columns="review_comment_title", inplace=True)
+
+reviews['review_answer_timestamp'] = reviews['review_answer_timestamp'].dt.date
+
+reviews = reviews[reviews["order_id"].isin(orders["order_id"])]
+
+
+
