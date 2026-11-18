@@ -132,10 +132,9 @@ Report-page completion does not establish that all analytical calculations have 
 
 ### 4.5. Dashboard Screenshots
 
-![Executive Sales Overview & Key Metrics](reports\figures\sales_dashboard_page-0001.jpg)
+![Executive Sales Overview & Key Metrics](reports/figures/sales_dashboard_page-0001.jpg)
 
-![Market Basket Analysis & Product Pairings](reports\figures\sales_dashboard_page-0005.jpg)
-
+![Market Basket Analysis & Product Pairings](reports/figures/sales_dashboard_page-0005.jpg)
 
 ## 5. Key Findings
 
