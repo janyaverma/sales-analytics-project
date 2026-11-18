@@ -1,3 +1,14 @@
+'''
+Note: Some code in this script is intentionally repeated. 
+Running the entire script at once in Power BI would take a long time to import all the tables, 
+so each table is imported separately, which is considerably faster. 
+The script is structured this way so that each section can be copied from data_cleaning.py 
+and pasted directly into Power BI.
+
+'''
+
+# Geolocation Table
+
 # Importing libraries
 
 import numpy as np
@@ -19,17 +30,6 @@ connection_string = ( # Note that this is a tuple and not a string
 )
 
 conn = pyodbc.connect(connection_string)
-
-# Customers Table
-
-query = "SELECT * FROM olist_customers_dataset"
-customers = pd.read_sql(query, conn)
-
-customers['customer_city'] = customers['customer_city'].str.title()
-
-customers = customers.drop(columns=["customer_unique_id"])
-
-# Geolocation Table
 
 query = "SELECT * FROM olist_geolocation_dataset"
 geo = pd.read_sql(query, conn)
@@ -64,20 +64,37 @@ geo["geolocation_city"] = geo["geolocation_city"].str.replace("Sao Joao Do Pau D
 
 geo.drop_duplicates(inplace=True)
 
-# Customers Table
-
-customers["customer_city"] = customers["customer_city"].str.title()
-customers["customer_city"] = customers["customer_city"].apply(unidecode)
-customers["customer_city"] = customers["customer_city"].apply(keep_text_only)
 
 # Products Table
+
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
 
 query = "SELECT * FROM olist_products_dataset"
 products = pd.read_sql(query, conn)
 
 products.drop(columns=['product_name_lenght', 'product_description_lenght', 'product_weight_g', 'product_length_cm', 'product_height_cm', 'product_width_cm'], inplace=True)
 
-# Products Table and Products_name Table
+## Products Table and Products_name Table
 
 query = "select * from product_category_name_translation"
 products_name = pd.read_sql(query, conn)
@@ -95,14 +112,103 @@ products.drop(columns=["product_category_english","product_category"], inplace=T
 
 # Sellers Table
 
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
+
 query = "SELECT * FROM olist_sellers_dataset"
 sellers = pd.read_sql(query, conn)
+
+def keep_text_only(s):
+    if pd.isna(s):
+        return s
+    return re.sub(r'[^a-zA-Z\s]', '', str(s)).strip()
 
 sellers["seller_city"] = sellers["seller_city"].str.title()
 
 sellers['seller_city'] = sellers['seller_city'].apply(keep_text_only)
 
 # Orders Table
+
+## Customers Table
+
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
+
+query = "SELECT * FROM olist_customers_dataset"
+customers = pd.read_sql(query, conn)
+
+customers['customer_city'] = customers['customer_city'].str.title()
+
+customers = customers.drop(columns=["customer_unique_id"])
+
+def keep_text_only(s):
+    if pd.isna(s):
+        return s
+    return re.sub(r'[^a-zA-Z\s]', '', str(s)).strip()
+
+customers["customer_city"] = customers["customer_city"].str.title()
+customers["customer_city"] = customers["customer_city"].apply(unidecode)
+customers["customer_city"] = customers["customer_city"].apply(keep_text_only)
+
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
 
 query = "SELECT * FROM olist_orders_dataset"
 orders = pd.read_sql(query, conn)
@@ -119,7 +225,7 @@ to_remove = orders[(orders["order_status"]=="canceled") & (orders["order_deliver
 
 orders = orders.drop(to_remove)
 
-# Payments Table
+## Payments Table
 
 query = "SELECT * FROM olist_order_payments_dataset"
 payments = pd.read_sql(query, conn)
@@ -132,7 +238,7 @@ payments = payments.groupby(["order_id", "payment_type"])["payment_value"].sum()
 
 orders = pd.merge(orders, payments, on="order_id", how="inner")
 
-# Items Table
+## Items Table
 
 query = "SELECT * FROM olist_order_items_dataset"
 items = pd.read_sql(query, conn)
@@ -149,15 +255,49 @@ orders = orders[
 
 orders.drop(columns=["order_item_id"], inplace=True)
 
-orders = orders.groupby(['order_id', 'customer_id', 'order_status', 'order_purchase_timestamp',
-       'order_approved_at', 'order_delivered_carrier_date',
-       'order_delivered_customer_date', 'order_estimated_delivery_date',
-       'payment_type', 'payment_value', 'product_id', 'seller_id',
-       'shipping_limit_date'])[["price", "freight_value"]].sum().reset_index()
+# orders = orders.groupby(['order_id', 'customer_id', 'order_status', 'order_purchase_timestamp',
+#        'order_approved_at', 'order_delivered_carrier_date',
+#        'order_delivered_customer_date', 'order_estimated_delivery_date',
+#        'payment_type', 'payment_value', 'product_id', 'seller_id',
+#        'shipping_limit_date'])[["price", "freight_value"]].sum().reset_index()
+
+orders = orders.groupby([
+    'order_id', 'customer_id', 'order_status',
+    'order_purchase_timestamp', 'order_approved_at',
+    'order_delivered_carrier_date', 'order_delivered_customer_date',
+    'order_estimated_delivery_date', 'payment_type', 'payment_value',
+    'product_id', 'seller_id', 'shipping_limit_date'
+]).agg(
+    price=('price', 'sum'),
+    freight_value=('freight_value', 'sum'),
+    quantity=('product_id', 'count')
+).reset_index()
 
 orders = pd.merge(orders, customers, on="customer_id", how="inner")
 
-# Reviews Table
+## Reviews Table
+
+# Importing libraries
+
+import numpy as np
+import pandas as pd 
+import pyodbc
+from unidecode import unidecode
+import re
+
+# Creating connection
+
+server = r"Kit-PC\SQLEXPRESS"  # Name of my server
+database = "sales_analytics_project"  # Name of my database
+
+connection_string = ( # Note that this is a tuple and not a string
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    f"SERVER={server};"
+    f"DATABASE={database};"
+    "Trusted_Connection=yes;"
+)
+
+conn = pyodbc.connect(connection_string)
 
 query ="select * from olist_order_reviews_dataset"
 reviews = pd.read_sql(query, conn)

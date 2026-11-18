@@ -1,131 +1,167 @@
+
 # Sales Analytics Project
 
-This is a data analytics project. For the lifecycle and process of completing this project I have taken inspiration from the CRISP-DM framework used in the tech industry. Although it was developed for data mining, it is also useful as a general framework for analytics projects.  
+An end-to-end e-commerce analytics project using the Olist Brazilian E-Commerce dataset, Microsoft SQL Server, Python, and Power BI.
 
-## 1. Problem Definition
+The project follows an adapted CRISP-DM workflow, covering business understanding, data assessment, preparation, analytical modeling, visualization, and documentation.
 
-Here I will define the business problem and questions that are required to be answered.
+## 1. Business Context and Objectives
 
-### 1.1. Business context
+The project addresses 14 analytical requirements defined by a hypothetical e-commerce client to assess sales performance, customer behavior, product performance, payment preferences, order fulfillment, and seller performance.
 
-### 1.2. Objectives 
+The objective is to prepare transactional data and develop a Power BI report that supports business performance monitoring and exploratory decision-making.
 
-### 1.3. Stakeholders
+- [Project Brief](docs/project_brief.md)
+- [Business Requirements](docs/business_requirements.md)
 
-### 1.4. Analytical Questions
+## 2. Technology Stack
 
-The project addresses 14 analytical questions
-defined by a hypothetical e-commerce client.
+| Technology | Application |
+|---|---|
+| Microsoft SQL Server | Source-data storage and retrieval |
+| SQL Server Management Studio | Database creation and flat-file imports |
+| SQL | Database setup, metadata inspection, and source-data extraction |
+| Python | Data assessment, cleaning, and transformation |
+| Pandas | Filtering, aggregation, joins, and DataFrame manipulation |
+| PyODBC | SQL Server connectivity |
+| Unidecode and Regular Expressions | Geographic text normalization |
+| Jupyter Notebook | Interactive data assessment and transformation development |
+| Power BI | Data modeling, analysis, and interactive reporting |
+| DAX | Calculated columns, KPI measures, and analytical calculations |
+| Power Query | Analytical table preparation |
+| Git and GitHub | Version control and project documentation |
 
-These requirements guide the development of
-the Power BI dashboard, covering key business
-areas such as sales performance, customer
-behavior, and product performance.
+## 3. Dataset
 
-For the complete list of analytical requirements,
-see [Business Requirements](docs/business_requirements.md).
+**Source:** Olist Brazilian E-Commerce Public Dataset
 
-## 2. Tech Stack
+The dataset contains anonymized e-commerce records associated with the Brazilian marketplace Olist.
 
-I have used the following tools for doing this project.
+| Attribute | Description |
+|---|---|
+| Raw datasets | 9 |
+| Processed datasets | 6 |
+| Raw order records | 99,441 |
+| Raw order purchase period | September 2016 – October 2018 |
+| Processed order purchase period | October 2016 – August 2018 |
+| Processed transaction records | 80,156 |
+| Power BI report pages | 14 |
 
-### 2.1. Python
-#### 2.1.1. Numpy
-#### 2.1.2. Pandas
+The processed orders table contains aggregated transaction records rather than one record per unique order.
 
-### 2.2. MS SQL
+The original and processed schemas, field definitions, and logical relationships are documented in the [Data Dictionary](docs/data_dictionary.md).
 
-### 2.3. PowerBI
+## 4. Project Workflow
 
-## 3. Data Understanding
+```mermaid
+flowchart TD
+    A[Olist Source CSV Files] --> B[SQL Server Database]
+    B --> C[Python Data Assessment and Preparation]
+    C --> D[Six Processed DataFrames]
+    D --> E[Processed CSV Exports]
+    D --> F[Power BI Python Imports]
+    E --> F
+    F --> G[Data Modeling and DAX]
+    G --> H[14 Business Requirement Report Pages]
+    H --> I[Findings and Validation]
+```
 
-### 3.1. The data source and its license and access conditions.
+### 4.1. Database Setup
 
-### 3.2. The schema, meaning, and quality of data.
+The nine source datasets were imported into a local SQL Server database using SQL Server Management Studio.
 
-### 3.3. Data dictionary
+The SQL script creates the database and provides queries for inspecting its table and column metadata.
 
-## 4. Data Quality Assessment And Preparation
+Python retrieves the source tables through PyODBC using Windows authentication.
 
-Here I have talked about the cleaning and preparation of the data that include but is not limited to the following:
+### 4.2. Data Assessment and Preparation
 
-### 4.1. Filter and join
+Data preparation was performed in Python using Pandas.
 
-### 4.2. Missing values
+The implemented transformations include:
 
-### 4.3. Duplicates and inconsistent records
+- Inspecting dataset schemas, data types, missing values, and identifier uniqueness.
+- Checking and removing duplicate geographic records.
+- Normalizing customer, seller, and geolocation city names.
+- Mapping Portuguese product categories to English.
+- Filtering order records using timestamp eligibility conditions.
+- Aggregating payments by order and payment method.
+- Integrating orders, payments, order items, and customer information.
+- Aggregating item prices and freight charges while retaining product quantities.
+- Filtering customer reviews to match retained orders.
+- Exporting six processed datasets as CSV files.
 
-### 4.4. Data types
+The transformation development process and execution outputs are available in `notebooks/01_data_cleaning.ipynb`.
 
-## 5. Data Transformation And Analysis
+The section-based transformation script is available in `src/data_cleaning.py`.
 
-For analytics I have used the following:
+### 4.3. Processed Data Model
 
-### 5.1. Exploratory data analysis
+| Table | Rows | Purpose |
+|---|---:|---|
+| `customers` | 99,441 | Customer records and registered locations |
+| `geo` | 19,612 | Postal code, city, and state information |
+| `orders` | 80,156 | Consolidated transaction and fulfillment information |
+| `products` | 32,951 | Product categories and photo counts |
+| `reviews` | 75,503 | Order-linked customer feedback |
+| `sellers` | 3,095 | Seller records and registered locations |
 
-### 5.2. SQL queries
+The Power BI model also contains `category_pairs` for market basket analysis and `measure_table` for analytical measures.
 
-### 5.3. Python analysis
+### 4.4. Business Analysis and Reporting
 
-### 5.4. KPI calculations
+Business calculations and visualizations were developed primarily in Power BI using DAX and built-in visual aggregations.
 
-## 6. Visualization and communication
+The report contains 14 pages corresponding to the client requirements.
 
-### 6.1. Power BI data model
+| Business Domain | Analytical Coverage |
+|---|---|
+| Executive sales overview | Customers, orders, sales, average order value, and inactivity |
+| Customer behavior | Annual churn and customer inactivity |
+| Product performance | Category contribution, product photos, recent products, seasonality, and price changes |
+| Market basket analysis | Product category associations |
+| Promotion analysis | Hypothetical BOGO profitability simulation |
+| Payment analysis | Payment-method distribution |
+| Fulfillment | Delivery timeliness, review scores, and fulfillment durations |
+| Category maturity | First and last 90-day revenue comparison |
+| Seller performance | Review scores and local-market sales |
 
-### 6.2. Measures 
+The implemented report is available in `powerbi/sales_dashboard.pbix`.
 
-### 6.3. Dashboard 
+Report-page completion does not establish that all analytical calculations have been validated.
 
-### 6.4. Findings
+### 4.5. Dashboard Screenshots
 
-## 7. Validation and review
+![Executive Sales Overview & Key Metrics](reports\figures\sales_dashboard_page-0001.jpg)
 
-Here I will verify calculations and assess whether the results answer your original questions. 
-
-### 7.1. Reconciliation of totals
-
-### 7.2. Calculation tests
-
-### 7.3. Conclusions verification
-
-## 8. Delivery And Documentation
-
-The deliverables for this project include the powerbi reports and dashboard and the reproducible python and sql results.
+![Market Basket Analysis & Product Pairings](reports\figures\sales_dashboard_page-0005.jpg)
 
 
-The process is iterative. If a SQL result reveals a data-quality issue, return to data preparation; if a dashboard exposes an ambiguous KPI, revisit its definition.
+## 5. Key Findings
 
----
+The data preparation process established that:
 
-## Skills Demonstrated
+- Geographic records required substantial deduplication and text normalization.
+- Payments and order items require different aggregation granularities.
+- Repeated products within an order can represent valid purchased quantities rather than duplicate transactions.
+- Customer identifiers have different meanings and must be selected according to the analytical requirement.
+- Missing timestamps and restrictive filtering conditions affect analytical coverage.
 
-This project is designed to demonstrate three core competencies relevant to data analytics.
+Documented observations, analytical approaches, and outstanding validation requirements are available in [Findings](docs/findings.md).
 
-### 1. Analytical Thinking
-- Translate a business problem into specific, answerable analytical questions.
-- Define relevant KPIs and explain their significance.
-- Interpret results in the context of the original business problem.
-- Develop evidence-based findings and recommendations.
+Final dashboard result values have not been independently reconciled.
 
-### 2. Technical Competence
-- Use SQL to query, join, aggregate, and validate data.
-- Use Python for data preparation, exploratory analysis, and additional validation.
-- Build an interactive Power BI dashboard to communicate results.
-- Check the consistency and correctness of key metrics across the analytical workflow.
+## 6. Analytical Limitations
 
-### 3. Professional Working Practices
-- Organize code, data, documentation, and deliverables in a clear project structure.
-- Document data sources, assumptions, metric definitions, and limitations.
-- Make the analytical workflow understandable and reproducible, where the available data and tools permit.
-- Present findings clearly and support conclusions with evidence.
-- Practice version control and commit meaningful changes throughout the project instead of uploading everything at the end. Use clear messages such as 'Add sales KPI queries'.
+- The consolidated orders table combines item-level and payment-method-level information. Multi-method payments may multiply transaction records and inflate aggregated values.
+- The persistent customer identifier, `customer_unique_id`, was removed during preparation, limiting reliable customer retention and churn analysis.
+- Timestamp filtering excludes records that fail eligibility conditions, including records with missing timestamps. This may introduce selection bias.
+- Product launch dates are approximated using first observed purchases.
+- Cost and profit information is unavailable. The promotion analysis uses an assumed profit margin and requires further validation.
+- Market basket, payment, price, fulfillment, and seller calculations require aggregation-grain validation.
+- The dataset represents historical marketplace activity and should not be interpreted as current business performance.
 
----
-
-# Project Structure
-
-## Directory structure is as follows:
+## 7. Repository Structure
 
 ```text
 sales-analytics-project/
@@ -134,26 +170,25 @@ sales-analytics-project/
 ├── .gitignore
 ├── .gitattributes
 ├── requirements.txt
+│
 ├── docs/
-│   ├── project_brief.md
+│   ├── business_requirements.md
 │   ├── data_dictionary.md
-│   ├── business_requirements.md 
-|   └── findings.md
-│ 
+│   ├── findings.md
+│   └── project_brief.md
+│
 ├── data/
 │   ├── raw/
 │   └── processed/
 │
 ├── sql/
-│   ├── 01_create_db.sql
-|
+│   └── 01_create_db.sql
 │
 ├── notebooks/
-|   ├── 01_data_cleaning.ipynb
-│   └── 02_exploratory_analysis.ipynb
+│   └── 01_data_cleaning.ipynb
 │
 ├── src/
-│   └── data_cleaning.txt
+│   └── data_cleaning.py
 │
 ├── powerbi/
 │   └── sales_dashboard.pbix
@@ -162,27 +197,81 @@ sales-analytics-project/
     └── figures/
 ```
 
-## Directory structure explanation
-
 | Directory | Purpose |
 |---|---|
-| `docs/` | Project documentation, data definitions, and business findings. |
-| `data/raw/` | Original, unmodified datasets. |
-| `data/processed/` | Cleaned and transformed datasets. |
-| `sql/` | SQL scripts for data validation, exploration, KPI analysis, and advanced analytics. |
-| `notebooks/` | Jupyter notebooks for exploratory data analysis. |
-| `src/` | Reusable Python scripts for data cleaning and transformation. |
-| `powerbi/` | Power BI dashboard files. |
-| `reports/figures/` | Exported charts and dashboard screenshots. |
+| `docs/` | Business requirements, scope, data definitions, and findings |
+| `data/raw/` | Original source datasets |
+| `data/processed/` | Cleaned and transformed datasets |
+| `sql/` | Database setup and schema inspection |
+| `notebooks/` | Exploratory data inspection and transformation development |
+| `src/` | Data transformation scripts |
+| `powerbi/` | Power BI report and semantic model |
+| `reports/figures/` | Reserved directory for exported figures |
 
-| File | Description |
-|---|---|
-| `project_brief.md` | Business problem, objectives, stakeholders, and analytical questions. |
-| `data_dictionary.md` | Dataset schemas, column definitions, and data types. |
-| `findings.md` | Analytical findings and business recommendations. |
-| `data_cleaning.py` | Reusable Python ETL and data-cleaning pipeline. |
-| `requirements.txt` | Python dependencies required to run the project. |
+## 8. Reproducing the Workflow
 
-# Limitations of this repository
+### Prerequisites
 
-GitHub is my version-control and documentation home, not necessarily the place where my entire project runs. A Power BI .pbix file may require Power BI Desktop to inspect, and database setup may require separate instructions.
+- Microsoft SQL Server and SQL Server Management Studio
+- Microsoft ODBC Driver 17 for SQL Server
+- Python and Jupyter Notebook
+- Power BI Desktop
+- Original Olist CSV datasets
+
+### Execution
+
+1. Execute `sql/01_create_db.sql` to create the database.
+2. Import the nine source CSV datasets into SQL Server using SSMS.
+3. Create and activate a Python virtual environment.
+4. Install the required Python dependencies.
+
+```bash
+pip install -r requirements.txt
+pip install pyodbc Unidecode
+```
+
+5. Update the SQL Server connection settings in the Python files.
+6. Update the CSV export path in `notebooks/01_data_cleaning.ipynb`.
+7. Execute the notebook to inspect, transform, and export the processed datasets.
+8. Open `powerbi/sales_dashboard.pbix` in Power BI Desktop.
+9. Update the report's data-source connections where required.
+
+The transformation script contains separate import sections designed for use in Power BI. It is not a fully automated ETL pipeline.
+
+The imported SQL schema must match the column names and data types expected by the Python transformations.
+
+## 9. Skills Demonstrated
+
+### Technical Skills
+
+- SQL Server database setup and data retrieval
+- Python-based data quality assessment
+- Multi-table data integration
+- Data filtering and aggregation
+- Data grain identification
+- Data modeling in Power BI
+- DAX measure and calculated column development
+- Business-oriented report design
+
+### Analytical Skills
+
+- Translating business questions into analytical requirements
+- Defining KPIs and analytical calculations
+- Identifying data quality and modeling limitations
+- Time-window comparisons
+- Category-level market basket analysis
+- Scenario-based profitability analysis
+
+### Professional Working Practices
+
+- Structured repository organization
+- Business and technical documentation
+- Preservation of transformation logic
+- Version control using Git
+- Documentation of assumptions and validation requirements
+
+## 10. Project Status
+
+Data preparation and initial Power BI report development are complete.
+
+Calculation validation, financial reconciliation, and final business interpretation remain outstanding.
